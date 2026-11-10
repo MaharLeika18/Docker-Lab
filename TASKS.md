@@ -1,109 +1,48 @@
-# Containerize It — Docker Lab
+# Containerize It — Completed Docker Lab
 
-**Topic: Docker · work in pairs**
+## Part A — Build the image
 
-The SecureNotes API is finished and tested. Your job is to **package it into a
-Docker image**, then **run the whole stack** (API + a Postgres database) with
-one command. You write three files: `Dockerfile`, `.dockerignore`, and
-`docker-compose.yml`. You don't touch the app or the tests.
+- [x] **A1** — Use the pinned, slim `python:3.12-slim` base image.
+- [x] **A2** — Set `/app` as the working directory.
+- [x] **A3** — Copy `requirements.txt` and install dependencies before copying the source, preserving the dependency layer cache.
+- [x] **A4** — Copy the application source into the image.
+- [x] **A5** — Expose port `8000` and start Uvicorn bound to `0.0.0.0`.
 
-> You need **Docker Desktop** installed and running, and an internet connection
-> (Docker downloads the base images the first time).
+## Part B — Improve the image
 
----
+- [x] **B1** — Create and use the unprivileged `appuser`.
+- [x] **B2** — Exclude virtual environments, Git metadata, bytecode, test artifacts, and environment files from the build context.
 
-## Setup
+## Part C — Run the stack with Compose
 
-```bash
-# 1. the app runs the same as before — confirm it's healthy
-python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-pytest -q              # 12 app tests pass; the 15 Docker checks are red (your job)
+- [x] **C1** — Build the API service, publish port `8000`, wait for the database health check, and pass `DATABASE_URL`.
+- [x] **C2** — Run `postgres:16` with configured credentials, a persistent named volume, and a readiness health check.
 
-# 2. make sure Docker is ready
-docker --version
-docker run --rm hello-world     # should print a success message
-```
+Compose validation commands:
 
-Two structural test files guide you — run the one for the part you're on:
-
-```bash
-pytest tests/test_dockerfile.py    # Parts A & B
-pytest tests/test_compose.py       # Part C
-```
-
-These check your files are built right. They can't build the image for you —
-that happens with real Docker commands, and the screenshots are your proof.
-
----
-
-## Part A — Write the Dockerfile  (~40 min)
-
-File: `Dockerfile`  ·  check: `pytest tests/test_dockerfile.py`
-
-- [ ] **A1** — `FROM` a small, pinned Python base (e.g. `python:3.12-slim`)
-- [ ] **A2** — set a `WORKDIR` (e.g. `/app`)
-- [ ] **A3** — `COPY requirements.txt .` then `RUN pip install -r requirements.txt`
-      **before** copying the code (so the install layer caches)
-- [ ] **A4** — `COPY . .` to bring in the rest of the source
-- [ ] **A5** — `EXPOSE 8000` and a `CMD` that starts uvicorn on `--host 0.0.0.0`
-
-Then build and run it for real:
-
-```bash
-docker build -t securenotes .
-docker run -p 8000:8000 securenotes      # open http://localhost:8000/docs
-```
-
-## Part B — Make it a good image  (~25 min)
-
-- [ ] **B1** — add a non-root `USER` (create one, then switch to it)
-- [ ] **B2** — fill in `.dockerignore` so `venv/`, `.git/`, `__pycache__/` and
-      other junk never get copied into the image
-
-Rebuild — the image should still work, and the build context shrinks.
-
-## Part C — Run the whole stack with Compose  (~35 min)
-
-File: `docker-compose.yml`  ·  check: `pytest tests/test_compose.py`
-
-- [ ] **C1** — an `api` service that `build:`s from your Dockerfile, maps port
-      `8000`, `depends_on` the db, and gets `DATABASE_URL`
-- [ ] **C2** — a `db` service using `postgres:16`, with a volume and the
-      `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` env vars
-
-Bring it up and prove the two containers can talk:
-
-```bash
+```powershell
+pytest tests/test_dockerfile.py
+pytest tests/test_compose.py
 docker compose up -d
-curl http://localhost:8000/health/db     # -> {"database":"ok"}
-docker compose ps                         # api + db both up
+curl http://localhost:8000/health/db
+docker compose ps
 docker compose down
 ```
 
-The `/health/db` endpoint is already in the app — with no database it says
-`"not configured"`, but once compose connects Postgres it returns `"ok"`. That
-`ok` is your proof the containers are networked together.
+The expected health response is `{"database":"ok"}`. The Docker-based commands and screenshots still need to be captured in an environment with Docker running.
 
-## Part D — Ship it & submit  (~20 min)
+## Part D — Submit
 
-```bash
-git init && git add . && git commit -m "Dockerized SecureNotes"
-git branch -M main
-git remote add origin https://github.com/<you>/securenotes-docker.git
-git push -u origin main
-```
+- [x] Dockerfile, `.dockerignore`, `docker-compose.yml`, and this completed checklist are in the repository.
+- [ ] Push the completed work to the GitHub repository.
+- [ ] Capture screenshots of a successful image build, `/docs` served by the container, and the API/database stack running.
 
-Capture **three screenshots**: (1) `docker build` finishing, (2) `/docs` open in
-the browser from the running container, (3) `docker compose ps` with both
-containers up (or the `{"database":"ok"}` response).
+## Reflection
 
----
+1. **Why should the container behave the same on another operating system?**
 
-## Reflection (3–4 sentences)
+   The image packages the application, Python runtime, and pinned dependencies together on a consistent base image. Docker runs that image with the same filesystem and runtime environment on supported hosts, avoiding differences between locally installed Python versions, packages, and operating-system configuration.
 
-1. Your teammate clones the repo on a different OS and runs `docker run`. Why
-   does it behave the same as on your machine, when running the app directly
-   might not?
-2. Why copy `requirements.txt` and install *before* copying the rest of the
-   code? What does it save on a rebuild?
+2. **Why install dependencies before copying the source code?**
+
+   Docker caches each build layer. Requirements change less often than application code, so copying and installing them first lets Docker reuse the dependency-install layer after ordinary code edits, making rebuilds faster.
