@@ -2,3 +2,8 @@
 # Add one path per line — at least venv/, .git/, and __pycache__/,
 # plus anything else that doesn't belong in a shipped image.
 # (lines starting with # are comments)
+.venv/
+.git/
+__pycache__/
+.gitattributes
+.gitignore

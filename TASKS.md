@@ -41,12 +41,12 @@ that happens with real Docker commands, and the screenshots are your proof.
 
 File: `Dockerfile`  ·  check: `pytest tests/test_dockerfile.py`
 
-- [ ] **A1** — `FROM` a small, pinned Python base (e.g. `python:3.12-slim`)
-- [ ] **A2** — set a `WORKDIR` (e.g. `/app`)
-- [ ] **A3** — `COPY requirements.txt .` then `RUN pip install -r requirements.txt`
+- [x] **A1** — `FROM` a small, pinned Python base (e.g. `python:3.12-slim`)
+- [x] **A2** — set a `WORKDIR` (e.g. `/app`)
+- [x] **A3** — `COPY requirements.txt .` then `RUN pip install -r requirements.txt`
       **before** copying the code (so the install layer caches)
-- [ ] **A4** — `COPY . .` to bring in the rest of the source
-- [ ] **A5** — `EXPOSE 8000` and a `CMD` that starts uvicorn on `--host 0.0.0.0`
+- [x] **A4** — `COPY . .` to bring in the rest of the source
+- [x] **A5** — `EXPOSE 8000` and a `CMD` that starts uvicorn on `--host 0.0.0.0`
 
 Then build and run it for real:
 
@@ -57,8 +57,8 @@ docker run -p 8000:8000 securenotes      # open http://localhost:8000/docs
 
 ## Part B — Make it a good image  (~25 min)
 
-- [ ] **B1** — add a non-root `USER` (create one, then switch to it)
-- [ ] **B2** — fill in `.dockerignore` so `venv/`, `.git/`, `__pycache__/` and
+- [x] **B1** — add a non-root `USER` (create one, then switch to it)
+- [x] **B2** — fill in `.dockerignore` so `venv/`, `.git/`, `__pycache__/` and
       other junk never get copied into the image
 
 Rebuild — the image should still work, and the build context shrinks.
@@ -67,9 +67,9 @@ Rebuild — the image should still work, and the build context shrinks.
 
 File: `docker-compose.yml`  ·  check: `pytest tests/test_compose.py`
 
-- [ ] **C1** — an `api` service that `build:`s from your Dockerfile, maps port
+- [x] **C1** — an `api` service that `build:`s from your Dockerfile, maps port
       `8000`, `depends_on` the db, and gets `DATABASE_URL`
-- [ ] **C2** — a `db` service using `postgres:16`, with a volume and the
+- [x] **C2** — a `db` service using `postgres:16`, with a volume and the
       `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` env vars
 
 Bring it up and prove the two containers can talk:
@@ -105,5 +105,18 @@ containers up (or the `{"database":"ok"}` response).
 1. Your teammate clones the repo on a different OS and runs `docker run`. Why
    does it behave the same as on your machine, when running the app directly
    might not?
+   It works the same because docker captures the exact instance configuration
+   I used to run it on my end and allows my teammate to use that same configuration
+   on their machine. Running the app directly may not work the same because they 
+   might have different versions of packages installed on their system compared
+   to mine and cause a difference in behaviour. Docker ensures those differences
+   are mitigated by recreating the exact expected project environment in any
+   machine. 
 2. Why copy `requirements.txt` and install *before* copying the rest of the
    code? What does it save on a rebuild?
+   It saves time and network bandwidth especially with numerous rebuilds. If the
+   requirements file was copied first, every rebuild calls for pip to fetch the
+   listed packages everytime even though realistically those wouldn't have been
+   needed to be reinstalled in the middle of development. Keeping it before the
+   line to copy the code cuts on the redundancy of fetching packages that are 
+   already installed into the environment. 
