@@ -34,7 +34,7 @@ The expected health response is `{"database":"ok"}`. The Docker-based commands a
 ## Part D — Submit
 
 - [x] Dockerfile, `.dockerignore`, `docker-compose.yml`, and this completed checklist are in the repository.
-- [ ] Push the completed work to the GitHub repository.
+- [x] Push the completed work to the [GitHub repository](https://github.com/MaharLeika18/Docker-Lab/tree/Shekinah) on the `Shekinah` branch.
 - [ ] Capture screenshots of a successful image build, `/docs` served by the container, and the API/database stack running.
 
 ## Reflection
